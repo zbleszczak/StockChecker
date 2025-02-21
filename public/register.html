@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registration Page</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icon-192x192.png" type="image/png">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1>Registration Page</h1>
+  <form id="registrationForm">
+    <div class="form-group">
+      <label for="email">Email:</label>
+      <input type="email" id="email" placeholder="Wpisz email" required>
+    </div>
+    <div class="form-group">
+      <label for="username">Nazwa użytkownika:</label>
+      <input type="text" id="username" placeholder="Wpisz nazwę użytkownika" required>
+    </div>
+    <div class="form-group">
+      <label for="password">Hasło:</label>
+      <input type="password" id="password" placeholder="Wpisz hasło" required>
+    </div>
+    <div class="form-group">
+      <label for="confirmPassword">Potwierdź hasło:</label>
+      <input type="password" id="confirmPassword" placeholder="Potwierdź hasło" required>
+    </div>
+    <button type="submit">Zarejestruj</button>
+  </form>
+
+  <script src="/scripts/validation.js"></script>
+
+  <script>
+    document.getElementById('registrationForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const email = document.getElementById('email').value;
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (password !== confirmPassword) {
+        alert('Password and Confirm Password must match');
+        return;
+      }
+
+      const response = await fetch('/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, username, password })
+      });
+
+      if (response.ok) {
+        alert('Registration successful');
+        window.location.href = '/index.html';
+      } else if (response.status === 409) {
+        alert('Username already exists');
+      } else {
+        alert('Registration failed');
+      }
+    });
+  </script>
+</body>
+</html>

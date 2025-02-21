@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icon-192x192.png" type="image/png">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #stockInfo {
+      text-align: center;
+    }
+    #stockChart {
+      width: 600px;
+      height: 400px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to the Dashboard!</h1>
+    <p>U completed login form!</p>
+
+    <form id="stockForm" class="center-form">
+      <input type="text" id="stockSymbol" placeholder="Enter stock symbol" required>
+      <button type="submit">Search</button>
+    </form>
+
+    <div id="stockInfo"></div>
+    <canvas id="stockChart"></canvas>
+  </div>
+
+  <script>
+    let stockChart;
+
+    document.getElementById('stockForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const stockSymbol = document.getElementById('stockSymbol').value;
+      const apiKey = '6ECXX4D6R3WDAIJQ'; //LENGQ14Y6Z7E9KL3
+
+      const response = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${stockSymbol}&apikey=${apiKey}`);
+      const data = await response.json();
+
+      const stockInfo = data['Global Quote'];
+
+      if (stockInfo) {
+        const stockInfoElement = document.getElementById('stockInfo');
+        stockInfoElement.innerHTML = `
+          <h2>${stockInfo['01. symbol']}</h2>
+          <p>Price: ${stockInfo['05. price']}</p>
+          <p>Change: ${stockInfo['09. change']}</p>
+          <p>Change Percent: ${stockInfo['10. change percent']}</p>
+        `;
+
+        const chartResponse = await fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${stockSymbol}&interval=5min&apikey=${apiKey}`);
+        const chartData = await chartResponse.json();
+        const timeSeries = chartData['Time Series (5min)'];
+
+        if (timeSeries) {
+          const labels = Object.keys(timeSeries).reverse();
+          const prices = labels.map(label => parseFloat(timeSeries[label]['4. close']));
+
+          if (stockChart) {
+            stockChart.destroy();
+          }
+
+          stockChart = new Chart(document.getElementById('stockChart'), {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: 'Stock Price',
+                data: prices,
+                borderColor: 'blue',
+                fill: false
+              }]
+            },
+            options: {
+              responsive: true,
+              title: {
+                display: true,
+                text: 'Stock Price Chart'
+              }
+            }
+          });
+        } else {
+          if (stockChart) {
+            stockChart.destroy();
+          }
+          alert('No intraday data available for this stock');
+        }
+      } else {
+        alert('Stock not found');
+      }
+    });
+  </script>
+</body>
+</html>
